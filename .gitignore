@@ -1,0 +1,33 @@
+# WordPress uploads
+wordpress/wp-content/uploads/
+
+# WordPress config
+wordpress/wp-config.php
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Database
+db_data/
+
+# Node
+frontend/node_modules/
+frontend/.next/
+
+# Python
+ai-service/.venv/
+ai-service/venv/
+ai-service/__pycache__/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
