@@ -1,8 +1,16 @@
 # WordPress uploads
 wordpress/wp-content/uploads/
-
+ 
 # WordPress config
 wordpress/wp-config.php
+
+# Ignore WordPress
+wordpress/*
+
+# Allow directory path
+!wordpress/wp-content/
+!wordpress/wp-content/plugins/**
+
 
 # Environment files
 .env
