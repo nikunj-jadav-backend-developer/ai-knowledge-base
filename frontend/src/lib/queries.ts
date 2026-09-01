@@ -1,6 +1,6 @@
 export const GET_ALL_ARTICLES_QUERY = `
 query GetKnowledgeArticles {
-    knowledgeArticles {
+    knowledgeArticles(first: 100) {
       nodes {
         id
         title
