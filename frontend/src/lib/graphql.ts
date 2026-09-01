@@ -20,8 +20,14 @@ const response =  await fetch(WORDPRESS_GRAPHQL_URL,{
     
     });
 
-    if(!response.ok) {
-        throw new Error(`GraphQL request failed with status ${response.status}`);   
+    if (!response.ok) {
+        const errorText = await response.text();
+
+        console.error("GraphQL Error:", errorText);
+
+        throw new Error(
+            `GraphQL request failed with status ${response.status}: ${errorText}`
+        );
     }
     const result = await response.json();
     if (result.errors) {
