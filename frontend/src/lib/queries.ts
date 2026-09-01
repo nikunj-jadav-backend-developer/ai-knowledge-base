@@ -7,6 +7,9 @@ query GetKnowledgeArticles {
         slug
         content
         excerpt
+        knowledgeArticleDetails {
+          difficulty
+        }
       }
     }
   }
