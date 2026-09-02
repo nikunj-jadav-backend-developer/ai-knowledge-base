@@ -39,5 +39,21 @@ query GetKnowledgeArticleBySlug($slug: ID!) {
       }
     }
 }
+`;
 
+
+export const GET_PAGE_BY_SLUG_QUERY = `
+  query GetPageBySlug($uri: ID!) {
+    page(
+      id: $uri
+      idType: URI
+    ) {
+      id
+      databaseId
+      title
+      slug
+      uri
+      content
+    }
+  }
 `;
