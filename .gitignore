@@ -67,3 +67,6 @@ override.tf.json
 # SSH private keys
 *.pem
 knowledge-base-key.pem
+
+# Private files
+.private/
