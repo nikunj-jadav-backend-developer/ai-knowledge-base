@@ -7,7 +7,7 @@ export default function Footer() {
         © {new Date().getFullYear()} AI Knowledge Base. All rights reserved.
       </div>
       <nav className="flex justify-center gap-6 text-sm">
-        <Link href="/about" className="hover:underline">
+        <Link href="/about-us" className="hover:underline">
           About Us
         </Link>
 
