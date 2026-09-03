@@ -40,7 +40,7 @@ export default async function WordPressPage({
         </h1>
 
         <div
-          className="prose max-w-none"
+          className="wordpress-content max-w-none"
           dangerouslySetInnerHTML={{
             __html: page.content,
           }}

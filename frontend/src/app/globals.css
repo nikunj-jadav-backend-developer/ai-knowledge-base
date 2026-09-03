@@ -25,3 +25,57 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+
+.wordpress-content p {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  line-height: 1.7;
+  font-size: 20px;
+}
+
+.wordpress-content h1,
+.wordpress-content h2,
+.wordpress-content h3,
+.wordpress-content h4,
+.wordpress-content h5,
+.wordpress-content h6 {
+  margin-top: 1.75rem;
+  margin-bottom: 0.75rem;
+  font-weight: 700;
+}
+
+.wordpress-content ul {
+  list-style-type: disc;
+  margin-top: 0.75rem;
+  margin-bottom: 1rem;
+  padding-left: 1.5rem;
+}
+
+.wordpress-content ol {
+  list-style-type: decimal;
+  margin-top: 0.75rem;
+  margin-bottom: 1rem;
+  padding-left: 1.5rem;
+}
+
+.wordpress-content li {
+  margin-bottom: 0.4rem;
+  font-size: 20px;
+
+}
+
+.wordpress-content a {
+  text-decoration: underline;
+}
+
+.wordpress-content blockquote {
+  margin: 1.5rem 0;
+  padding-left: 1rem;
+  border-left: 4px solid #d1d5db;
+}
+
+.wordpress-content img {
+  max-width: 100%;
+  height: auto;
+  margin: 1.5rem 0;
+}
