@@ -7,3 +7,8 @@ export interface KnowledgeArticle{
     date:string;
     modified:string;
 }
+
+export interface Category {
+  name: string;
+  slug: string;
+}

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { fetchGraphQL } from "@/lib/graphql";
 import { GET_ALL_ARTICLES_QUERY } from "@/lib/queries";
+import { Category } from "@/types/article";
 
 interface ArticleDetails {
   difficulty: string[] | null;
@@ -13,6 +14,11 @@ interface KnowledgeArticle {
   slug: string;
   content: string;
   excerpt: string;
+
+  knowledgeCategories: {
+    nodes: Category[];
+  };
+
   knowledgeArticleDetails: ArticleDetails | null;
 }
 
@@ -25,6 +31,7 @@ interface ArticlesResponse {
 interface ArticlesPageProps {
   searchParams: Promise<{
     difficulty?: string;
+    category?: string;
   }>;
 }
 
@@ -33,11 +40,30 @@ export default async function ArticlesPage({
 }: ArticlesPageProps) {
   const params = await searchParams;
 
-  // URL value:
-  // /articles?difficulty=beginner
+  /*
+   * ==========================================
+   * URL FILTER VALUES
+   * ==========================================
+   *
+   * Examples:
+   *
+   * /articles
+   * /articles?difficulty=beginner
+   * /articles?category=python
+   * /articles?category=python&difficulty=beginner
+   */
 
   const selectedDifficulty =
     params.difficulty?.trim().toLowerCase() || "all";
+
+  const selectedCategory =
+    params.category?.trim().toLowerCase() || "all";
+
+  /*
+   * ==========================================
+   * FETCH ARTICLES
+   * ==========================================
+   */
 
   const data =
     await fetchGraphQL<ArticlesResponse>(
@@ -49,24 +75,100 @@ export default async function ArticlesPage({
 
   /*
    * ==========================================
+   * GET UNIQUE CATEGORIES
+   * ==========================================
+   *
+   * Categories come from WordPress.
+   *
+   * Example:
+   *
+   * Python
+   * FastAPI
+   * Next.js
+   * WordPress
+   * DevOps
+   */
+
+  const categories = Array.from(
+    new Map(
+      articles
+        .flatMap(
+          (article) =>
+            article.knowledgeCategories?.nodes ?? []
+        )
+        .map((category) => [
+          category.slug,
+          category,
+        ])
+    ).values()
+  );
+
+  /*
+   * ==========================================
    * FILTER ARTICLES
    * ==========================================
+   *
+   * Both filters work together.
+   *
+   * Example:
+   *
+   * category = python
+   * difficulty = beginner
+   *
+   * Result:
+   * Python + Beginner articles only
    */
 
   const filteredArticles =
-    selectedDifficulty === "all"
-      ? articles
-      : articles.filter((article) => {
-          const difficulties =
-            article.knowledgeArticleDetails
-              ?.difficulty ?? [];
+    articles.filter((article) => {
+      /*
+       * ----------------------------------------
+       * DIFFICULTY MATCH
+       * ----------------------------------------
+       */
 
-          return difficulties.some(
-            (difficulty) =>
-              difficulty.trim().toLowerCase() ===
-              selectedDifficulty
-          );
-        });
+      const difficulties =
+        article.knowledgeArticleDetails
+          ?.difficulty ?? [];
+
+      const difficultyMatch =
+        selectedDifficulty === "all" ||
+        difficulties.some(
+          (difficulty) =>
+            difficulty.trim().toLowerCase() ===
+            selectedDifficulty
+        );
+
+      /*
+       * ----------------------------------------
+       * CATEGORY MATCH
+       * ----------------------------------------
+       */
+
+      const articleCategories =
+        article.knowledgeCategories?.nodes ?? [];
+
+      const categoryMatch =
+        selectedCategory === "all" ||
+        articleCategories.some(
+          (category) =>
+            category.slug
+              .trim()
+              .toLowerCase() ===
+            selectedCategory
+        );
+
+      /*
+       * ----------------------------------------
+       * BOTH FILTERS MUST MATCH
+       * ----------------------------------------
+       */
+
+      return (
+        difficultyMatch &&
+        categoryMatch
+      );
+    });
 
   /*
    * ==========================================
@@ -111,6 +213,71 @@ export default async function ArticlesPage({
     );
   };
 
+  /*
+   * ==========================================
+   * URL HELPER
+   * ==========================================
+   *
+   * This keeps the other filter when changing
+   * the current filter.
+   */
+
+  const createFilterUrl = ({
+    category,
+    difficulty,
+  }: {
+    category?: string;
+    difficulty?: string;
+  }) => {
+    const queryParams = new URLSearchParams();
+
+    if (category && category !== "all") {
+      queryParams.set(
+        "category",
+        category
+      );
+    }
+
+    if (difficulty && difficulty !== "all") {
+      queryParams.set(
+        "difficulty",
+        difficulty
+      );
+    }
+
+    const queryString =
+      queryParams.toString();
+
+    return queryString
+      ? `/articles?${queryString}`
+      : "/articles";
+  };
+
+  /*
+   * ==========================================
+   * CURRENT FILTER LABELS
+   * ==========================================
+   */
+
+  const selectedCategoryObject =
+    categories.find(
+      (category) =>
+        category.slug
+          .trim()
+          .toLowerCase() ===
+        selectedCategory
+    );
+
+  const selectedCategoryLabel =
+    selectedCategoryObject?.name ||
+    selectedCategory;
+
+  /*
+   * ==========================================
+   * PAGE
+   * ==========================================
+   */
+
   return (
     <main className="mx-auto max-w-7xl px-6 py-12">
 
@@ -132,7 +299,65 @@ export default async function ArticlesPage({
       </div>
 
       {/* ======================================
-          FILTER
+          CATEGORY FILTER
+      ====================================== */}
+
+      <div className="mb-6">
+
+        <p className="mb-3 text-sm font-medium text-gray-500">
+          Filter by Category
+        </p>
+
+        <div className="flex flex-wrap gap-3">
+
+          {/* ALL CATEGORIES */}
+
+          <Link
+            href={createFilterUrl({
+              category: "all",
+              difficulty:
+                selectedDifficulty,
+            })}
+            className={`rounded-lg border px-4 py-2 text-sm font-medium transition ${
+              selectedCategory === "all"
+                ? "bg-black text-white"
+                : "bg-white hover:bg-gray-100"
+            }`}
+          >
+            All
+          </Link>
+
+          {/* CATEGORIES */}
+
+          {categories.map(
+            (category) => (
+              <Link
+                key={category.slug}
+                href={createFilterUrl({
+                  category:
+                    category.slug,
+                  difficulty:
+                    selectedDifficulty,
+                })}
+                className={`rounded-lg border px-4 py-2 text-sm font-medium transition ${
+                  selectedCategory ===
+                  category.slug
+                    .trim()
+                    .toLowerCase()
+                    ? "bg-black text-white"
+                    : "bg-white hover:bg-gray-100"
+                }`}
+              >
+                {category.name}
+              </Link>
+            )
+          )}
+
+        </div>
+      </div>
+
+      {/* ======================================
+          DIFFICULTY FILTER
       ====================================== */}
 
       <div className="mb-8">
@@ -146,7 +371,11 @@ export default async function ArticlesPage({
           {/* ALL */}
 
           <Link
-            href="/articles"
+            href={createFilterUrl({
+              category:
+                selectedCategory,
+              difficulty: "all",
+            })}
             className={`rounded-lg border px-4 py-2 text-sm font-medium transition ${
               selectedDifficulty === "all"
                 ? "bg-black text-white"
@@ -159,9 +388,15 @@ export default async function ArticlesPage({
           {/* BEGINNER */}
 
           <Link
-            href="/articles?difficulty=beginner"
+            href={createFilterUrl({
+              category:
+                selectedCategory,
+              difficulty:
+                "beginner",
+            })}
             className={`flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition ${
-              selectedDifficulty === "beginner"
+              selectedDifficulty ===
+              "beginner"
                 ? "bg-black text-white"
                 : "bg-white hover:bg-gray-100"
             }`}
@@ -174,9 +409,15 @@ export default async function ArticlesPage({
           {/* INTERMEDIATE */}
 
           <Link
-            href="/articles?difficulty=intermediate"
+            href={createFilterUrl({
+              category:
+                selectedCategory,
+              difficulty:
+                "intermediate",
+            })}
             className={`flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition ${
-              selectedDifficulty === "intermediate"
+              selectedDifficulty ===
+              "intermediate"
                 ? "bg-black text-white"
                 : "bg-white hover:bg-gray-100"
             }`}
@@ -189,9 +430,15 @@ export default async function ArticlesPage({
           {/* ADVANCED */}
 
           <Link
-            href="/articles?difficulty=advanced"
+            href={createFilterUrl({
+              category:
+                selectedCategory,
+              difficulty:
+                "advanced",
+            })}
             className={`flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition ${
-              selectedDifficulty === "advanced"
+              selectedDifficulty ===
+              "advanced"
                 ? "bg-black text-white"
                 : "bg-white hover:bg-gray-100"
             }`}
@@ -211,13 +458,17 @@ export default async function ArticlesPage({
       <div className="mb-6">
 
         <p className="text-sm text-gray-500">
+
           Showing{" "}
+
           <span className="font-semibold text-gray-900">
             {filteredArticles.length}
           </span>{" "}
+
           {filteredArticles.length === 1
             ? "article"
             : "articles"}
+
         </p>
 
       </div>
@@ -235,13 +486,38 @@ export default async function ArticlesPage({
           </h2>
 
           <p className="mt-2 text-gray-500">
+
             No articles are available for{" "}
-            <span className="font-medium">
-              {getDifficultyLabel(
-                selectedDifficulty
-              )}
-            </span>{" "}
-            difficulty.
+
+            {selectedCategory !== "all" && (
+              <>
+                category{" "}
+                <span className="font-medium text-gray-900">
+                  {selectedCategoryLabel}
+                </span>
+              </>
+            )}
+
+            {selectedCategory !== "all" &&
+              selectedDifficulty !== "all" &&
+              " and "}
+
+            {selectedDifficulty !== "all" && (
+              <>
+                <span className="font-medium text-gray-900">
+                  {getDifficultyLabel(
+                    selectedDifficulty
+                  )}
+                </span>{" "}
+                difficulty
+              </>
+            )}
+
+            {selectedCategory === "all" &&
+              selectedDifficulty ===
+                "all" &&
+              "with the selected filters"}.
+
           </p>
 
           <Link
@@ -260,15 +536,26 @@ export default async function ArticlesPage({
           {filteredArticles.map(
             (article) => {
 
+              /*
+               * -------------------------------
+               * DIFFICULTY
+               * -------------------------------
+               */
+
               const difficulty =
                 article
                   .knowledgeArticleDetails
                   ?.difficulty?.[0] ?? "";
 
-              const difficultyLower =
-                difficulty
-                  .trim()
-                  .toLowerCase();
+              /*
+               * -------------------------------
+               * CATEGORIES
+               * -------------------------------
+               */
+
+              const articleCategories =
+                article.knowledgeCategories
+                  ?.nodes ?? [];
 
               return (
 
@@ -277,7 +564,9 @@ export default async function ArticlesPage({
                   className="rounded-xl border p-6 shadow-sm transition hover:shadow-md"
                 >
 
-                  {/* Difficulty */}
+                  {/* ==========================
+                      DIFFICULTY
+                  ========================== */}
 
                   {difficulty && (
                     <div className="mb-4 flex items-center gap-2">
@@ -297,13 +586,17 @@ export default async function ArticlesPage({
                     </div>
                   )}
 
-                  {/* Title */}
+                  {/* ==========================
+                      TITLE
+                  ========================== */}
 
                   <h2 className="mb-3 text-2xl font-semibold">
                     {article.title}
                   </h2>
 
-                  {/* Excerpt */}
+                  {/* ==========================
+                      EXCERPT
+                  ========================== */}
 
                   {article.excerpt && (
                     <div
@@ -315,7 +608,41 @@ export default async function ArticlesPage({
                     />
                   )}
 
-                  {/* Read Article */}
+                  {/* ==========================
+                      CATEGORIES
+                  ========================== */}
+
+                  {articleCategories.length >
+                    0 && (
+                    <div className="mb-5 flex flex-wrap gap-2">
+
+                      {articleCategories.map(
+                        (category) => (
+                          <Link
+                            key={
+                              category.slug
+                            }
+                            href={createFilterUrl(
+                              {
+                                category:
+                                  category.slug,
+                                difficulty:
+                                  selectedDifficulty,
+                              }
+                            )}
+                            className="rounded-full border px-3 py-1 text-xs font-medium text-gray-600 transition hover:bg-gray-100"
+                          >
+                            {category.name}
+                          </Link>
+                        )
+                      )}
+
+                    </div>
+                  )}
+
+                  {/* ==========================
+                      READ ARTICLE
+                  ========================== */}
 
                   <Link
                     href={`/articles/${article.slug}`}
