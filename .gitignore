@@ -39,3 +39,31 @@ Thumbs.db
 
 # Logs
 *.log
+
+
+# Terraform working directory
+.terraform/
+
+# Terraform state files
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+
+# Sensitive Terraform variables
+*.tfvars
+*.tfvars.json
+
+# Terraform override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Terraform plan files
+*.tfplan
+*.plan
+
+# SSH private keys
+*.pem
+knowledge-base-key.pem
