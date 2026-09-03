@@ -7,6 +7,12 @@ query GetKnowledgeArticles {
         slug
         content
         excerpt
+        knowledgeCategories {
+          nodes {
+            name
+            slug
+          }
+        }
         knowledgeArticleDetails {
           difficulty
         }
@@ -27,7 +33,12 @@ query GetKnowledgeArticleBySlug($slug: ID!) {
       slug
       content
       excerpt
-
+      knowledgeCategories {
+        nodes {
+          name
+          slug
+        }
+      }
       knowledgeArticleDetails {
         difficulty
         readingTime
@@ -43,17 +54,25 @@ query GetKnowledgeArticleBySlug($slug: ID!) {
 
 
 export const GET_PAGE_BY_SLUG_QUERY = `
-  query GetPageBySlug($uri: ID!) {
+  query GetPageBySlug($slug: ID!) {
     page(
-      id: $uri
+      id: $slug
       idType: URI
     ) {
       id
       databaseId
       title
       slug
-      uri
       content
+
+      featuredImage {
+        node {
+          sourceUrl
+          altText
+        }
+      }
     }
   }
 `;
+
+
