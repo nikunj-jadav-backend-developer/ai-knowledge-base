@@ -72,3 +72,10 @@ knowledge-base-key.pem
 .private/*
 .private/aws-ec2-public-ip-notes.txt
 .private/
+
+# Database files
+*.sql
+
+# Backup files
+*.bak
+*.tar.gz
