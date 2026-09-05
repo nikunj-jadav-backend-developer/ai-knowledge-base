@@ -69,4 +69,6 @@ override.tf.json
 knowledge-base-key.pem
 
 # Private files
+.private/*
+.private/aws-ec2-public-ip-notes.txt
 .private/

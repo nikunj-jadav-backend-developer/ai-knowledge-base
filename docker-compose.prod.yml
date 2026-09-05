@@ -1,0 +1,87 @@
+services:
+
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+    networks:
+      - backend
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-p${MYSQL_ROOT_PASSWORD}"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+
+  wordpress:
+    image: wordpress:latest
+    restart: unless-stopped
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+    environment:
+      WORDPRESS_DB_HOST: mysql:3306
+      WORDPRESS_DB_NAME: ${MYSQL_DATABASE}
+      WORDPRESS_DB_USER: ${MYSQL_USER}
+      WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD}
+
+    volumes:
+      - wordpress_data:/var/www/html
+
+    ports:
+      - "8000:80"
+
+    networks:
+      - backend
+
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+
+    restart: unless-stopped
+
+    depends_on:
+      - wordpress
+
+    environment:
+      NODE_ENV: production
+      WORDPRESS_GRAPHQL_URL: http://wordpress/graphql
+
+    ports:
+      - "3000:3000"
+
+    networks:
+      - backend
+
+
+networks:
+  backend:
+
+
+volumes:
+  mysql_data:
+  wordpress_data:
